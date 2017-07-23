@@ -51,7 +51,38 @@ class FTPClient(object):
         '是否使用md5校验'
         if '--md5' in list_cmd:
             return True
-
+    def _put(self,list_cmd):
+        print('put功能',list_cmd)
+        'put 文件位置 放的位置'
+        if  os.path.isfile(list_cmd[1]):
+            '文件位置正确'
+            file_size=os.path.getsize(list_cmd[1])
+            if len(list_cmd)==2:
+                data_header={
+                    'action':'put',
+                    'filesize':file_size
+                }
+            else:
+                data_header={
+                    'action':'put',
+                    'filename':list_cmd[2],
+                    'filesize':file_size
+                }
+            self.sock.send(json.dumps(data_header).encode('utf-8'))
+            response=self.get_response()
+            print(response)
+            if response.get('status_code'==259):
+                '开始发送'
+                rf = open(list_cmd[1],'rb')
+                for line in rf:
+                    self.sock.send(line)
+                else:
+                    print('发送完成')
+                    rf.close()
+                pass
+        else:
+            print('没有该文件')
+        pass
     def _get(self,list_cmd):
         print('get功能',list_cmd)
         if len(list_cmd)==1:
@@ -124,7 +155,7 @@ class FTPClient(object):
         current_size=0
         while received_size<total:
             if int((received_size/total)*100)>current_size:
-                print('#',end='',flush=True)
+                print('#')
                 current_size=int((received_size/total)*100)
             new_size=yield
             received_size+=new_size

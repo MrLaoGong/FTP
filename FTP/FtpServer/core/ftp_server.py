@@ -16,7 +16,8 @@ STATUS_CODE={
     255:'客户端传过来的文件名为空',
     256:'文件不存在',
     257:'文件已经准备好',
-    258:'md5生成'
+    258:'md5生成',
+    259:'服务器准备接受文件'
 }
 class FTPHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -60,6 +61,30 @@ class FTPHandler(socketserver.BaseRequestHandler):
             else:
                 print('验证失败')
     def _put(self,*args,**kwargs):
+        data=args[0]
+        userpath=''
+        if data.get('filename') is None:
+            '沒有指定位置'
+            pass
+        elif os.path.exits(data.get('filename')):
+            '有这个路径'
+            userpath=data.get('filename')
+            pass
+        else:
+            '没有这个路径，创造这个路径'
+            os.makedirs(data.get('filename'))
+            userpath=data.get('filename')
+        self.send_response(259)
+        file_size=data.get('filesize')
+        receivesize=0
+        wf=open(userpath,'wb')
+        while receivesize<file_size:
+            data=self.request.recv(1024)
+            wf.write(data)
+            receivesize+=len(data)
+        else:
+            print('接受完成')
+            wf.close
         pass
     def _get(self,*args,**kwargs):
         data=args[0]
