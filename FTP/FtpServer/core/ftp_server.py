@@ -16,9 +16,13 @@ STATUS_CODE={
     255:'客户端传过来的文件名为空',
     256:'文件不存在',
     257:'文件已经准备好',
-    258:'md5生成'
+    258:'md5生成',
+    259:'服务器准备接受文件',
+    260:'文件搜索到'
 }
+Base_path=r'C:\Users\Mr.Bool\Desktop\python作业\FTP\FTP\FTP\FtpServer\home\wj'
 class FTPHandler(socketserver.BaseRequestHandler):
+
     def handle(self):
         while True:
             print('有用户连接服务器')
@@ -59,7 +63,50 @@ class FTPHandler(socketserver.BaseRequestHandler):
                 return config[username]
             else:
                 print('验证失败')
+    def _ls(self,*args,**kwargs):
+        data=args[0]
+        userpath=''
+        if data.get('path') is None:
+            print('本地')
+        else:
+            print('根据路径去搜所有文件')
+            userpath=data.get('path')
+
+        userhomedir='%s/%s'%(settings.USER_HOME,self.user['Username'])
+        fileabspath='%s/%s'%(userhomedir,userpath)
+        print('路径：'+fileabspath)
+        filepath=os.listdir(fileabspath)
+        # print(list)
+        # filepath=""
+        # for line in list:
+        #     filepath = os.path.join(dir,line)
+        self.send_response(260,data={'filepath':filepath})
     def _put(self,*args,**kwargs):
+        data=args[0]
+        filepath=''
+        if data.get('filename') is None:
+            '沒有指定位置'
+            pass
+        elif os.path.exists(data.get('filename')):
+            '有这个路径'
+            filepath=data.get('filename')
+            pass
+        else:
+            '没有这个路径，创造这个路径'
+            os.makedirs(data.get('filename'))
+        userhomedir='%s/%s'%(settings.USER_HOME,self.user['Username'])
+        fileabspath='%s/%s'%(userhomedir,data.get('filename'))
+        self.send_response(259)
+        file_size=data.get('filesize')
+        receivesize=0
+        wf=open(fileabspath,'wb')
+        while receivesize<file_size:
+            data=self.request.recv(1024)
+            wf.write(data)
+            receivesize+=len(data)
+        else:
+            print('接受完成')
+            wf.close
         pass
     def _get(self,*args,**kwargs):
         data=args[0]
@@ -108,10 +155,6 @@ class FTPHandler(socketserver.BaseRequestHandler):
         else:
             self.send_response(256)
 
-        pass
-    def _cd(self,*args,**kwargs):
-        pass
-    def _ls(self,*args,**kwargs):
         pass
     def _auth(self,*args,**kwargs):
         data=args[0]
