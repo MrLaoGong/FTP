@@ -51,7 +51,6 @@ class FTPClient(object):
         '是否使用md5校验'
         if '--md5' in list_cmd:
             return True
-
     def _get(self,list_cmd):
         print('get功能',list_cmd)
         if len(list_cmd)==1:
